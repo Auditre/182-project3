@@ -19,8 +19,8 @@ public class Project3 extends JFrame implements ActionListener {
   private static int winxpos=0,winypos=0;      // place window here
 
 
-  private JButton fishButton, shuffleButton,exitButton, newButton, cheatButton, testButton;
-  private JTextField inputBox;
+  private JButton fishButton, shuffleButton, exitButton, newButton, cheatButton, testButton;
+  private JTextField inputBox, historyLog;
   private CardList theDeck = null;
   private JPanel northPanel;
   private MyPanel centerPanel;
@@ -41,37 +41,40 @@ public class Project3 extends JFrame implements ActionListener {
         myFrame = this;                 // need a static variable reference to a JFrame object
         northPanel = new JPanel();
         
+        
+        
         northPanel.setBackground(Color.white);
-        inputBox = new JTextField("this box will die eventually",20);
+        inputBox = new JTextField("Enter the rank of the card you're looking for into this box and hit \"Go Fish\"!",20);
         northPanel.add(inputBox);
         
         fishButton = new JButton("Go Fish");
         northPanel.add(fishButton);
         fishButton.addActionListener(this);
         
+        //THIS BUTTON IS USELESS
+//        testButton = new JButton("testroonie");
+//        northPanel.add(testButton);
+//        testButton.addActionListener(this);
         
-        testButton = new JButton("testroonie");
-        northPanel.add(testButton);
-        testButton.addActionListener(this);
-        
-        
-        shuffleButton = new JButton("Shuffle");
-        northPanel.add(shuffleButton);
-        shuffleButton.addActionListener(this);
-        
-        newButton = new JButton("New Deck");
-        northPanel.add(newButton);
-        newButton.addActionListener(this);
-        
+        //THIS BUTTON IS ALSO USELESS
+//        shuffleButton = new JButton("Shuffle");
+//        northPanel.add(shuffleButton);
+//        shuffleButton.addActionListener(this);
         
         cheatButton = new JButton("Cheat");
         northPanel.add(cheatButton);
         cheatButton.addActionListener(this);
         
+        newButton = new JButton("New Deck");
+        northPanel.add(newButton);
+        newButton.addActionListener(this);
         
         exitButton = new JButton("Exit");
         northPanel.add(exitButton);
         exitButton.addActionListener(this);
+        
+        historyLog = new JTextField("The game has started.");
+        northPanel.add(historyLog);
         
         
         getContentPane().add("North",northPanel);
@@ -79,22 +82,43 @@ public class Project3 extends JFrame implements ActionListener {
         centerPanel = new MyPanel();
         getContentPane().add("Center",centerPanel);
 
-        //INITIALIZES THE DECK AND SHUFFLES IT
-        theDeck = new CardList(52);
-        theDeck.shuffle();
+        initilizeGame();
         
-        //DEALS 5 CARDS TO PLAYER HAND
-        for(int i = 0; i<=5; i++) 
-        	playerHand.insertCard(theDeck.deleteCard(i));
         
-        //DEALS 5 CARDS TO DEALER HAND
-        for(int i = 0; i<=5; i++)
-        	dealerHand.insertCard(theDeck.deleteCard(i));
         
-        //FLIPS DEALER'S HAND OVER FACE DOWN. CODE REUSE FOR SINGLE INSTANCE OF THE CHEAT BUTTON.
-        Card current = dealerHand.getFirstCard();
         
-        while(current != null) {
+        
+
+        setSize(1000,1200);
+        setLocation(winxpos,winypos);
+
+        setVisible(true);
+   }
+  
+  public void initilizeGame() {
+	  
+	  //INITILIZES HANDS AND PAIRS
+	  playerHand = new CardList(0);
+	  playerPairs = new CardList(0);
+	  dealerHand = new CardList(0);
+	  dealerPairs = new CardList(0);
+
+      //INITIALIZES THE DECK AND SHUFFLES IT
+      theDeck = new CardList(52);
+      theDeck.shuffle();
+      
+      //DEALS 5 CARDS TO PLAYER HAND
+      for(int i = 0; i<=5; i++) 
+      	playerHand.insertCard(theDeck.deleteCard(i));
+      
+      //DEALS 5 CARDS TO DEALER HAND
+      for(int i = 0; i<=5; i++)
+      	dealerHand.insertCard(theDeck.deleteCard(i));
+      
+      //FLIPS DEALER'S HAND OVER FACE DOWN. CODE REUSE FOR SINGLE INSTANCE OF THE CHEAT BUTTON.
+      Card current = dealerHand.getFirstCard();
+      
+      while(current != null) {
 	        if(current.getIsFaceDown() == false) {
 	        	current.setCardImage(Project3.load_picture("images/gbCard52.gif"));
 	        	current.setIsFaceDown(true);
@@ -104,33 +128,8 @@ public class Project3 extends JFrame implements ActionListener {
 	        	current.setIsFaceDown(false);
 	        }
 	        current = current.getNextCard();
-        }
-        
-        
-        
-        
-        
-
-        setSize(895,1200);
-        setLocation(winxpos,winypos);
-
-        setVisible(true);
-   }
-  
-//  public void startGame() {
-//	  for(int i = 0; i <= 5; i++)
-//		  deal(theDeck,playerHand);
-//	  
-//  }
-//
-//  public void deal(CardList deck, CardList hand) {
-//	  Card current = deck.getFirstCard();
-//	 hand.insertCard(current);
-//	 deck.getFirstCard() = deck.get
-////	 deck.getFirstCard() = null;
-//	 
-//	  
-//  }
+      }
+  }
 
   ////////////   BUTTON CLICKS ///////////////////////////
   public void actionPerformed(ActionEvent e) {
@@ -142,8 +141,12 @@ public class Project3 extends JFrame implements ActionListener {
       
       if (e.getSource()== fishButton) {
         String inputmsg = inputBox.getText();
-        inputBox.setText("I do/don't got no stinkin' " + inputmsg);
-        theDeck = null;
+
+        
+        
+        
+        
+        
         repaint();
       }
       
@@ -186,9 +189,11 @@ public class Project3 extends JFrame implements ActionListener {
         
         repaint();
       }
+       
+       
        if (e.getSource()== newButton) {
         inputBox.setText("New Deck");
-        theDeck = new CardList(52);
+        initilizeGame();
         repaint();
       }
   }
