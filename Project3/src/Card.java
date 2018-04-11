@@ -7,7 +7,7 @@ import java.awt.Image;
 
 class Card extends Link {
   private Image cardimage;
-  private int rank;
+  private int rank = 0;
   private int cardnum;
   private boolean isFaceDown = false;
   

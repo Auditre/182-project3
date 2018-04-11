@@ -24,9 +24,11 @@ public class Project3 extends JFrame implements ActionListener {
   private CardList theDeck = null;
   private JPanel northPanel;
   private MyPanel centerPanel;
+  private int playerScore = 0, dealerScore = 0;
   private static JFrame myFrame = null;
   CardList playerHand = new CardList(0), playerPairs = new CardList(0),
   		dealerHand = new CardList(0), dealerPairs = new CardList(0);
+  private boolean isPlayerTurn = true;
   
 
   ////////////              MAIN      ////////////////////////
@@ -52,9 +54,9 @@ public class Project3 extends JFrame implements ActionListener {
         fishButton.addActionListener(this);
         
         //THIS BUTTON IS USELESS
-//        testButton = new JButton("testroonie");
-//        northPanel.add(testButton);
-//        testButton.addActionListener(this);
+        testButton = new JButton("testroonie");
+        northPanel.add(testButton);
+        testButton.addActionListener(this);
         
         //THIS BUTTON IS ALSO USELESS
 //        shuffleButton = new JButton("Shuffle");
@@ -89,7 +91,7 @@ public class Project3 extends JFrame implements ActionListener {
         
         
 
-        setSize(1000,1200);
+        setSize(1500,1500);
         setLocation(winxpos,winypos);
 
         setVisible(true);
@@ -119,18 +121,211 @@ public class Project3 extends JFrame implements ActionListener {
       Card current = dealerHand.getFirstCard();
       
       while(current != null) {
-	        if(current.getIsFaceDown() == false) {
-	        	current.setCardImage(Project3.load_picture("images/gbCard52.gif"));
-	        	current.setIsFaceDown(true);
-	        }
-	        else {
-	        	current.setCardImage(Project3.load_picture("images/gbCard" + current.getCardnum() + ".gif"));
-	        	current.setIsFaceDown(false);
-	        }
+	        flipCard(current);
 	        current = current.getNextCard();
       }
+      
+    //FLIPS THE DECK OVER FACE DOWN. CODE REUSE FOR SINGLE INSTANCE OF THE CHEAT BUTTON.
+      current = theDeck.getFirstCard();
+      while(current != null) {
+    	  	flipCard(current);
+	        current = current.getNextCard();
+    }
+      
+      
+      //CHECK FOR INITIAL PAIRS
+//      checkForPairs();
   }
+  
+  
+//  public void checkForPairs() {
+//	  
+//	  Card current = playerHand.getFirstCard();
+//      while(current != null) {
+//    	  Card current2 = current.getNextCard();
+//    	  while(current2 != null) {
+//    		  if(current.getRank() == current2.getRank() && current.getCardnum() != current2.getCardnum()) {
+//    			  playerPairs.insertCard(playerHand.deleteCard(current.getCardnum()));
+//    			  playerPairs.insertCard(playerHand.deleteCard(current2.getCardnum()));
+//    			  
+//    		  }
+//    		  current2 = current2.getNextCard();
+//    	  }
+//    	  current = current.getNextCard();
+//      }
+//      
+//      
+//	  
+//	  
+//  }
 
+  
+  public void fish(){
+		while(playerHand != null || dealerHand != null){
+			playerFish();
+			repaint();
+			if(isPlayerTurn == false) {
+				dealerFish();
+				repaint();
+			}
+			if(playerHand == null)
+				inputBox.setText("Player wins!");
+			else if(dealerHand == null)
+				inputBox.setText("Dealer wins!");
+		} // end of while
+		
+	} // end of fish
+
+  
+  public void playerFish(){
+	    int rankToLookFor = Integer.parseInt(inputBox.getText());
+		boolean playerHasCard = false;
+		boolean dealerHasCard = false;
+		int numOfC1 = -1;
+		int numOfC2 = -1;
+		Card current = playerHand.getFirstCard();
+		Card current2 = dealerHand.getFirstCard();
+		
+		//Check player's deck for the card
+		int counter = 0;
+		while(current != null){
+			if(current.getRank() == rankToLookFor){
+				numOfC1 = counter;
+				playerHasCard = true;	
+				break;
+			}
+			counter++;
+		current = current.getNextCard();
+		} // end of first while
+
+		
+		//Check dealer's deck for the card
+		counter = 0;
+		while(current2 != null){
+			if(current2.getRank() == rankToLookFor){
+				numOfC2 = counter;
+				dealerHasCard = true;
+				break;
+			}
+			counter++;
+			current2 = current2.getNextCard();
+		} // end of second while
+
+		
+		//Resolve who had the card
+		if(playerHasCard) 
+			if(dealerHasCard) {
+				
+				playerPairs.insertCard(playerHand.deleteCard(numOfC1));
+				playerPairs.insertCard(dealerHand.deleteCard(numOfC2));	
+				flipCardUp(playerPairs.getFirstCard());
+				flipCardUp(playerPairs.getFirstCard().getNextCard());
+				playerScore++;
+				repaint();
+			}else {
+				playerHand.insertCard(theDeck.deleteCard(0));
+				flipCardUp(playerHand.getFirstCard());
+				inputBox.setText("Go Fish!");
+				if(playerHand.getFirstCard().getRank() == current.getRank()) {
+					playerPairs.insertCard(playerHand.deleteCard(numOfC1+1));
+					playerPairs.insertCard(playerHand.deleteCard(0));
+					flipCardUp(playerPairs.getFirstCard());
+					flipCardUp(playerPairs.getFirstCard().getNextCard());
+					playerScore++;
+					inputBox.setText("Drew a pair!");
+					repaint();
+				}
+					
+			}
+		 else
+			inputBox.setText("You don't have that Card!");
+		
+			
+
+
+
+		this.isPlayerTurn = false;
+	} // end of player fish
+  
+  
+  public void dealerFish(){			//DEALERFISH DOES NOT WORK THE SAME WAY AS PLAYERFISH. DEALER DOES NOT USE THE TEXT BOX AND
+	  	int rankToLookFor = UserInput.randomWithRange(1, 13);
+		boolean playerHasCard = false;
+		boolean dealerHasCard = false;
+		int numOfC1 = -1;
+		int numOfC2 = -1;
+		Card current = dealerHand.getFirstCard();
+		Card current2 = playerHand.getFirstCard();
+		
+		//Check how many cards the dealer has
+		int counter = 0;
+		while(current != null){
+			if(current.getRank() == rankToLookFor) {
+				numOfC1 = counter;
+				dealerHasCard = true;
+			}
+			counter++;
+		current = current.getNextCard();
+			if(current == null && dealerHasCard == false) {
+				rankToLookFor = UserInput.randomWithRange(1, 13);
+				current = dealerHand.getFirstCard();
+			}
+		} // end of first while
+
+		
+		//Check player deck for the card
+		counter = 0;
+		while(current2 != null){
+			if(current2.getRank() == rankToLookFor){
+				numOfC2 = counter;
+				playerHasCard = true;
+				break;
+			}
+			counter++;
+			current2 = current2.getNextCard();
+		} // end of second while
+
+		
+		//Resolve who had the card
+		if(playerHasCard) {
+				dealerPairs.insertCard(playerHand.deleteCard(numOfC2));
+				dealerPairs.insertCard(dealerHand.deleteCard(numOfC1));	
+				flipCardUp(dealerPairs.getFirstCard());
+				flipCardUp(dealerPairs.getFirstCard().getNextCard());
+				dealerScore++;
+			}else {
+				inputBox.setText("Dealer Fished.");
+				
+				if(dealerHand.getFirstCard().getIsFaceDown()) {
+					dealerHand.insertCard(theDeck.deleteCard(0));
+					flipCardDown(dealerHand.getFirstCard());
+					inputBox.setText("lolnope");
+				}else
+					dealerHand.insertCard(theDeck.deleteCard(0));
+					
+
+				if(dealerHand.getFirstCard().getRank() == current.getRank()) {
+					dealerPairs.insertCard(dealerHand.deleteCard(numOfC1+1));
+					dealerPairs.insertCard(dealerHand.deleteCard(0));
+					flipCardUp(dealerPairs.getFirstCard());
+					flipCardUp(dealerPairs.getFirstCard().getNextCard());
+					dealerScore++;
+					inputBox.setText("Dealer drew a pair!");
+					repaint();
+					
+				}
+			}
+
+		this.isPlayerTurn = true;
+
+
+	} // end of dealer fish
+  
+  
+  
+  
+  
+  
   ////////////   BUTTON CLICKS ///////////////////////////
   public void actionPerformed(ActionEvent e) {
 
@@ -141,19 +336,18 @@ public class Project3 extends JFrame implements ActionListener {
       
       if (e.getSource()== fishButton) {
         String inputmsg = inputBox.getText();
-
         
-        
-        
-        
-        
+        fish();
+//        playerFish();
         repaint();
       }
       
       //For testing
       if(e.getSource() == testButton) {
     	  String inputmsg = inputBox.getText();
-    	  inputBox.setText("testaroonie");
+    	  inputBox.setText("Add card");
+    	  theDeck.getFirstCard().setCardImage(Project3.load_picture("images/gbCard" + theDeck.getFirstCard().getCardnum() + ".gif"));
+    	  playerHand.insertCard(theDeck.deleteCard(0));
     	  
     	  repaint();
       }
@@ -174,14 +368,7 @@ public class Project3 extends JFrame implements ActionListener {
         Card current = dealerHand.getFirstCard();
         
         while(current != null) {
-	        if(current.getIsFaceDown() == false) {
-	        	current.setCardImage(Project3.load_picture("images/gbCard52.gif"));
-	        	current.setIsFaceDown(true);
-	        }
-	        else {
-	        	current.setCardImage(Project3.load_picture("images/gbCard" + current.getCardnum() + ".gif"));
-	        	current.setIsFaceDown(false);
-	        }
+	        flipCard(current);
 	        current = current.getNextCard();
         }
         
@@ -198,6 +385,28 @@ public class Project3 extends JFrame implements ActionListener {
       }
   }
 
+  
+  public void flipCard(Card current) {
+	  if(current.getIsFaceDown() == false) {
+      	current.setCardImage(Project3.load_picture("images/gbCard52.gif"));
+      	current.setIsFaceDown(true);
+      }
+      else {
+      	current.setCardImage(Project3.load_picture("images/gbCard" + current.getCardnum() + ".gif"));
+      	current.setIsFaceDown(false);
+      }
+	  
+  }
+  
+  public void flipCardUp(Card current) {
+	  current.setCardImage(Project3.load_picture("images/gbCard" + current.getCardnum() + ".gif"));
+	  current.setIsFaceDown(false);
+	  
+  }
+  public void flipCardDown(Card current) {
+	  current.setCardImage(Project3.load_picture("images/gbCard52.gif"));
+	  current.setIsFaceDown(true);
+  }
 
 // This routine will load an image into memory
 //
@@ -233,11 +442,45 @@ class MyPanel extends JPanel {
   public void paintComponent (Graphics g) {
     //
 	 
-    int xpos = 105, ypos = 25;
+	  
+	//INITILAIZE POSITIONS AND DECK
+    int xpos, ypos;
+    Card current;
     g.drawString("This is ALL 52 cards in the Deck!", 25, 15);
     if (playerHand == null) 
     	return;
-    Card current = dealerHand.getFirstCard();
+    
+    
+
+    //DRAW SCORES
+    xpos = 10; ypos = 25;
+    g.drawString("Dealer Score", xpos, ypos);
+    g.drawString(""+dealerScore, xpos, ypos+10);
+    
+    xpos = 10; ypos = 760;
+    g.drawString("Player Score", xpos, ypos);
+    g.drawString(""+playerScore, xpos, ypos+10);
+    
+    
+    
+    //DISPLAY DECK
+    xpos = 105; ypos = 340;
+    current = theDeck.getFirstCard();
+    while(current != null) {
+    	Image tempimage = current.getCardImage();
+        g.drawImage(tempimage, xpos, ypos, this);
+        // note: tempimage member variable must be set BEFORE paint is called
+        xpos += 30;
+        if (xpos > 900) {
+           xpos = 105; ypos += 105;
+        }
+        current = current.getNextCard();	
+    }
+    
+    
+    //DISPLAY DEALER'S HAND
+    xpos = 105; ypos = 25;
+    current = dealerHand.getFirstCard();
     while (current!=null) {
        Image tempimage = current.getCardImage();
        g.drawImage(tempimage, xpos, ypos, this);
@@ -249,8 +492,8 @@ class MyPanel extends JPanel {
        current = current.getNextCard();
     }
     
-    
-    xpos = 105; ypos = 550;
+    //DISPLAY PLAYER'S HAND
+    xpos = 105; ypos = 760;
     current = playerHand.getFirstCard();
     while(current != null) {
     	Image tempimage = current.getCardImage();
@@ -260,12 +503,45 @@ class MyPanel extends JPanel {
         if (xpos > 900) {
            xpos = 105; ypos += 105;
         }
-        current = current.getNextCard();
-    	
-    	
-    	
-    	
+        current = current.getNextCard();	
     }
+    
+    
+    
+    //DISPLAY PLAYER PAIRS
+    xpos = 980; ypos = 760;
+    current = playerPairs.getFirstCard();
+    while(current != null) {
+    	Image tempimage = current.getCardImage();
+        g.drawImage(tempimage, xpos, ypos, this);
+        // note: tempimage member variable must be set BEFORE paint is called
+        xpos += 30;
+        if (xpos > 1070) {
+           xpos = 980; ypos += 105;
+        }
+        current = current.getNextCard();	
+    }
+    
+    
+    
+    
+    //DISPLAY DEALER PAIRS
+    xpos = 980; ypos = 25;
+    current = dealerPairs.getFirstCard();
+    while (current!=null) {
+       Image tempimage = current.getCardImage();
+       g.drawImage(tempimage, xpos, ypos, this);
+       // note: tempimage member variable must be set BEFORE paint is called
+       xpos += 30;
+       if (xpos > 1070) {
+          xpos = 980; ypos += 105;
+       }
+       current = current.getNextCard();
+    }
+    
+    
+    
+    
   }
 }
 
