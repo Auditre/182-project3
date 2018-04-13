@@ -29,6 +29,7 @@ public class Project3 extends JFrame implements ActionListener {
   CardList playerHand = new CardList(0), playerPairs = new CardList(0),
   		dealerHand = new CardList(0), dealerPairs = new CardList(0);
   private boolean isPlayerTurn = true;
+  private boolean playerWin = false, dealerWin = false, tie = false;
   
 
   ////////////              MAIN      ////////////////////////
@@ -110,11 +111,11 @@ public class Project3 extends JFrame implements ActionListener {
       theDeck.shuffle();
       
       //DEALS 5 CARDS TO PLAYER HAND
-      for(int i = 0; i<=5; i++) 
+      for(int i = 0; i<=6; i++) 
       	playerHand.insertCard(theDeck.deleteCard(i));
       
       //DEALS 5 CARDS TO DEALER HAND
-      for(int i = 0; i<=5; i++)
+      for(int i = 0; i<=6; i++)
       	dealerHand.insertCard(theDeck.deleteCard(i));
       
       //FLIPS DEALER'S HAND OVER FACE DOWN. CODE REUSE FOR SINGLE INSTANCE OF THE CHEAT BUTTON.
@@ -133,46 +134,71 @@ public class Project3 extends JFrame implements ActionListener {
     }
       
       
-      //CHECK FOR INITIAL PAIRS
+//      CHECK FOR INITIAL PAIRS
 //      checkForPairs();
   }
   
   
-//  public void checkForPairs() {
-//	  
-//	  Card current = playerHand.getFirstCard();
-//      while(current != null) {
-//    	  Card current2 = current.getNextCard();
-//    	  while(current2 != null) {
-//    		  if(current.getRank() == current2.getRank() && current.getCardnum() != current2.getCardnum()) {
-//    			  playerPairs.insertCard(playerHand.deleteCard(current.getCardnum()));
-//    			  playerPairs.insertCard(playerHand.deleteCard(current2.getCardnum()));
-//    			  
-//    		  }
-//    		  current2 = current2.getNextCard();
-//    	  }
-//    	  current = current.getNextCard();
-//      }
-//      
-//      
-//	  
-//	  
-//  }
+  public void checkForPairs() {
+	  
+	 boolean hasCard = false;
+	 int counter = 0;
+	 int counter2 = 0;
+	 
+	 Card current = playerHand.getFirstCard();
+	 Card current2 = playerHand.getFirstCard();
+	 while(current != null) {
+		 
+		 while(current2 != null) {
+			 
+			 if(current.getRank() == current2.getRank() && current.getCardnum() != current2.getCardnum()) {
+				 playerPairs.insertCard(playerHand.deleteCard(counter));
+				 playerPairs.insertCard(playerHand.deleteCard(counter2));
+				 hasCard = true;
+				 return;
+			 }
+			 counter2++;
+			 current2 = current.getNextCard();
+		 }
+		 
+		 if(hasCard)
+			 break;
+		 
+		 counter++;
+		 current = current.getNextCard();
+	 }
+	 
+     inputBox.setText("You started with a Pair!");
+	  
+	  
+  }
 
   
   public void fish(){
-		while(playerHand != null || dealerHand != null){
+		while(theDeck != null && playerHand != null && dealerHand != null){
 			playerFish();
 			repaint();
 			if(isPlayerTurn == false) {
 				dealerFish();
 				repaint();
-			}
-			if(playerHand == null)
-				inputBox.setText("Player wins!");
-			else if(dealerHand == null)
-				inputBox.setText("Dealer wins!");
+			}	
 		} // end of while
+		if((theDeck == null && playerHand == null) || (theDeck == null && dealerHand == null)) {
+			if(playerScore > dealerScore)
+				playerWin = true;
+			else if(playerScore < dealerScore)
+				dealerWin = true;
+			else if(playerScore == dealerScore)
+				tie = true;
+		}
+		
+		if(playerWin)
+			inputBox.setText("Player wins!");
+		else if(dealerWin)
+			inputBox.setText("Dealer wins!");
+		else if(tie)
+			inputBox.setText("Tie.");
+		
 		
 	} // end of fish
 
@@ -218,6 +244,18 @@ public class Project3 extends JFrame implements ActionListener {
 				
 				playerPairs.insertCard(playerHand.deleteCard(numOfC1));
 				playerPairs.insertCard(dealerHand.deleteCard(numOfC2));	
+				//If the player runs out of cards, give the player 3 more cards
+				if(playerHand.getFirstCard() == null) {
+					int i = 0;
+					while(i <= 2) {
+						if(theDeck != null) {
+							playerHand.insertCard(theDeck.deleteCard(0));
+							flipCardUp(playerHand.getFirstCard());
+						}
+						i++;
+					}
+					repaint();
+				}
 				flipCardUp(playerPairs.getFirstCard());
 				flipCardUp(playerPairs.getFirstCard().getNextCard());
 				playerScore++;
@@ -229,6 +267,18 @@ public class Project3 extends JFrame implements ActionListener {
 				if(playerHand.getFirstCard().getRank() == current.getRank()) {
 					playerPairs.insertCard(playerHand.deleteCard(numOfC1+1));
 					playerPairs.insertCard(playerHand.deleteCard(0));
+					//If the player runs out of cards, give the player 3 more cards
+					if(playerHand.getFirstCard() == null) {
+						int i = 0;
+						while(i <= 2) {
+							if(theDeck != null) {
+								playerHand.insertCard(theDeck.deleteCard(0));
+								flipCardUp(playerHand.getFirstCard());
+							}
+							i++;
+						}
+						repaint();
+					}
 					flipCardUp(playerPairs.getFirstCard());
 					flipCardUp(playerPairs.getFirstCard().getNextCard());
 					playerScore++;
@@ -237,12 +287,10 @@ public class Project3 extends JFrame implements ActionListener {
 				}
 					
 			}
-		 else
+		 else {
 			inputBox.setText("You don't have that Card!");
-		
-			
-
-
+			return; //If the player did NOT have the card it was asking for, the player has to try again.
+		 }
 
 		this.isPlayerTurn = false;
 	} // end of player fish
@@ -290,30 +338,44 @@ public class Project3 extends JFrame implements ActionListener {
 		if(playerHasCard) {
 				dealerPairs.insertCard(playerHand.deleteCard(numOfC2));
 				dealerPairs.insertCard(dealerHand.deleteCard(numOfC1));	
+				//If the dealer runs out of cards, give the dealer 3 more cards
+				
 				flipCardUp(dealerPairs.getFirstCard());
 				flipCardUp(dealerPairs.getFirstCard().getNextCard());
 				dealerScore++;
+				if(dealerHand.getFirstCard() == null) {
+					int i = 0;
+					while(i <= 2) {
+						if(theDeck != null) {
+							dealerHand.insertCard(theDeck.deleteCard(0));
+							flipCardUp(dealerHand.getFirstCard());
+						}
+						i++;
+					}
+					repaint();
+				}
 			}else {
 				inputBox.setText("Dealer Fished.");
 				
 				if(dealerHand.getFirstCard().getIsFaceDown()) {
 					dealerHand.insertCard(theDeck.deleteCard(0));
 					flipCardDown(dealerHand.getFirstCard());
-					inputBox.setText("lolnope");
-				}else
+				}else if(dealerHand.getFirstCard().getIsFaceDown() == false) {
 					dealerHand.insertCard(theDeck.deleteCard(0));
+					flipCardUp(dealerHand.getFirstCard());
+				}
 					
 
-				if(dealerHand.getFirstCard().getRank() == current.getRank()) {
-					dealerPairs.insertCard(dealerHand.deleteCard(numOfC1+1));
-					dealerPairs.insertCard(dealerHand.deleteCard(0));
-					flipCardUp(dealerPairs.getFirstCard());
-					flipCardUp(dealerPairs.getFirstCard().getNextCard());
-					dealerScore++;
-					inputBox.setText("Dealer drew a pair!");
-					repaint();
-					
-				}
+//				if(dealerHand.getFirstCard().getRank() == current.getRank()) {
+//					dealerPairs.insertCard(dealerHand.deleteCard(numOfC1+1));
+//					dealerPairs.insertCard(dealerHand.deleteCard(0));
+//					flipCardUp(dealerPairs.getFirstCard());
+//					flipCardUp(dealerPairs.getFirstCard().getNextCard());
+//					dealerScore++;
+//					inputBox.setText("Dealer drew a pair!");
+//					repaint();
+//					
+//				}
 			}
 
 		this.isPlayerTurn = true;
@@ -345,11 +407,8 @@ public class Project3 extends JFrame implements ActionListener {
       //For testing
       if(e.getSource() == testButton) {
     	  String inputmsg = inputBox.getText();
-    	  inputBox.setText("Add card");
-    	  theDeck.getFirstCard().setCardImage(Project3.load_picture("images/gbCard" + theDeck.getFirstCard().getCardnum() + ".gif"));
-    	  playerHand.insertCard(theDeck.deleteCard(0));
     	  
-    	  repaint();
+    	 checkForPairs();
       }
       
       //Shuffles the deck
